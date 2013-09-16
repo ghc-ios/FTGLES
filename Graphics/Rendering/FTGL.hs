@@ -192,12 +192,13 @@ setFontOutset :: Font -> Float -> Float -> IO ()
 setFontOutset font d o = fsetFontOutset font (realToFrac d) (realToFrac o)
 
 
-foreign import ccall unsafe "ftglGetFontBBox" fgetFontBBox :: Font -> CString -> Int -> Ptr CFloat -> IO () 
+foreign import ccall unsafe "ftglGetFontBBoxW" fgetFontBBoxW :: Font -> Ptr Word32 -> Int -> Ptr CFloat -> IO () 
 -- | Get the text extents of a string as a list of (llx,lly,lly,urx,ury,urz)
 getFontBBox :: Font -> String -> IO [Float]
-getFontBBox f s = allocaBytes 24 $ \pf -> 
-                     withCString s $ \ps -> do 
-                       fgetFontBBox f ps (-1) pf
+getFontBBox f str = allocaBytes 24 $ \pf -> 
+                     allocaArray (length str + 1) $ \ps -> do
+                       pokeArray0 0 ps (map (fromIntegral . ord) str)
+                       fgetFontBBoxW f ps (-1) pf
                        map realToFrac <$> peekArray 6 pf
 
 foreign import ccall unsafe "ftglGetFontAscender" fgetFontAscender :: Font -> CFloat
@@ -216,12 +217,13 @@ foreign import ccall unsafe "ftglGetFontLineHeight" fgetFontLineHeight :: Font -
 getFontLineHeight :: Font -> Float
 getFontLineHeight  = realToFrac . fgetFontLineHeight
 
-foreign import ccall unsafe "ftglGetFontAdvance" fgetFontAdvance :: Font -> CString -> IO CFloat
+foreign import ccall unsafe "ftglGetFontAdvanceW" fgetFontAdvanceW :: Font -> Ptr Word32 -> IO CFloat
 -- | Get the horizontal span of a string of text using the current font.  Input as the xcoord
 -- | in any translate operation
 getFontAdvance :: Font -> String -> IO Float
-getFontAdvance font str = realToFrac <$> (withCString str $ \p -> fgetFontAdvance font p )
-
+getFontAdvance font str = allocaArray (length str + 1) $ \p -> do
+        pokeArray0 0 p (map (fromIntegral . ord) str)
+        realToFrac <$> fgetFontAdvanceW font p
 
 foreign import ccall unsafe "ftglRenderFontW" frenderFontW :: Font -> Ptr Word32 -> CInt -> IO ()
 -- | Render a string of text in the current font.
