@@ -32,6 +32,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Data.Bits 
 import Data.Char (ord)
+import Data.Word
 
 import qualified Graphics.Rendering.OpenGL.GL as GL
 
@@ -222,11 +223,12 @@ getFontAdvance :: Font -> String -> IO Float
 getFontAdvance font str = realToFrac <$> (withCString str $ \p -> fgetFontAdvance font p )
 
 
-foreign import ccall unsafe "ftglRenderFont" frenderFont :: Font -> CString -> CInt -> IO ()
+foreign import ccall unsafe "ftglRenderFontW" frenderFontW :: Font -> Ptr Word32 -> CInt -> IO ()
 -- | Render a string of text in the current font.
 renderFont :: Font -> String -> RenderMode -> IO ()
-renderFont font str mode = withCString str $ \p -> do 
-	frenderFont font p (marshalRenderMode mode)
+renderFont font str mode = allocaArray (length str + 1) $ \p -> do
+        pokeArray0 0 p (map (fromIntegral . ord) str)
+	frenderFontW font p (marshalRenderMode mode)
 
 
 foreign import ccall unsafe "ftglGetFontError" fgetFontError :: Font -> IO CInt

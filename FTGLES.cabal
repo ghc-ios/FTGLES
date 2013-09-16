@@ -13,11 +13,10 @@ Description:
   This package provides OpenGL with polygonal, and texture mapped fonts using
   Freetype2 and any truetype font. 
   .
-  First, install this Cabal package. The C code doesn't need to exist at this point.
-  .
   Then build the C/C++ code for FTGLES, like this. Note that you must modify the two
   install.sh scripts to compile against whatever iOS SDK version you are using.
   .
+  > cd FTGLES
   > git clone git@github.com:cdave1/ftgles.git
   > git clone git@github.com:cdave1/freetype2-ios.git
   > cd freetype2-ios/
@@ -26,6 +25,8 @@ Description:
   > ln -s ../freetype2-ios freetype2
   > cd Xcode
   > bash install.sh
+  .
+  Now, install this Cabal package.
   .
   Now add these two files to your Xcode project:
   .
@@ -46,3 +47,6 @@ Library
    Build-Depends: OpenGL, base >= 4 && < 5
    Exposed-Modules:
       Graphics.Rendering.FTGL
+   C-Sources: Graphics/Rendering/FTGL_helper.cpp
+   Include-Dirs: ftgles/ftgles ftgles/ftgles/src freetype2-ios/include/
+
